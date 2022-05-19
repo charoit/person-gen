@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"time"
 
+	"github.com/charoit/person-gen/generator"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -19,64 +22,79 @@ const (
 )
 
 var (
-	// ToolVersion see (http://semver.org/)
+	// Version see (http://semver.org/)
 	// `-ldflags "-X main.Version=${VERSION}"`.
-	ToolVersion = "0.0.0-develop"
+	Version = "0.0.0-develop"
 )
 
 func main() {
-	var logVerbose bool
-	var logFormat string
+	var elapsedTime time.Time
 
-	log := logrus.New()
+	log := &logrus.Logger{
+		Out:   os.Stderr,
+		Level: logrus.InfoLevel,
+		Formatter: &logrus.TextFormatter{
+			DisableTimestamp: true,
+		},
+	}
 
+	params := generator.Params{}
 	app := &cli.App{
 		Name:        ToolName,
 		Usage:       ToolUsage,
-		Version:     ToolVersion,
+		Version:     Version,
 		Description: ToolDescription,
 
 		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:     "count",
-				Aliases:  []string{"c"},
-				Usage:    "Count of person `VALUE`",
-				Required: true,
+			&cli.IntFlag{
+				Name:        "count",
+				Aliases:     []string{"c"},
+				Usage:       "Count of person `VALUE`",
+				Required:    true,
+				Destination: &params.Count,
 			},
 			&cli.StringFlag{
-				Name:     "out",
-				Aliases:  []string{"o"},
-				Usage:    "Output result to `FILE`",
-				Required: true,
+				Name:    "out",
+				Aliases: []string{"o"},
+				Usage:   "Output result to `FILE`",
+				//Required:    true,
+				Destination: &params.OutFile,
 			},
 			&cli.StringFlag{
 				Name:        "format",
 				Aliases:     []string{"f"},
 				Usage:       "Output file format `csv|json`",
 				Value:       "csv",
-				Destination: &logFormat,
-				//Required:    true,
+				Destination: &params.Format,
 			},
 			&cli.BoolFlag{
 				Name:        "log",
 				Aliases:     []string{"l"},
 				Usage:       "Output verbose log to console",
 				Value:       false,
-				Destination: &logVerbose,
+				Destination: &params.Verbose,
 			},
 		},
 
 		Action: func(c *cli.Context) error {
+			if err := params.Validate(); err != nil {
+				return fmt.Errorf("validate failed: %w", err)
+			}
+
 			log.Info("Starting generation...")
-			log.Infof("Verbose: %v, format: %v", logVerbose, logFormat)
-			//	dmn := daemon.NewDaemon(cfg, log.NewEntry())
-			//	defer func() {
-			//		if err := dmn.Close(); err != nil {
-			//			log.NewEntry().Errorf("close daemon err: %s", err)
-			//		}
-			//	}()
-			//
-			//	return dmn.Run()
+			elapsedTime = time.Now()
+
+			gen := generator.New(log, &params)
+			total, err := gen.Generate()
+			if err != nil {
+				return fmt.Errorf("generated failed: %w", err)
+			}
+
+			log.Info("-------------------------------------------")
+			log.Info("Total person generated: ", total)
+			log.Info("Total time elapsed: ", time.Since(elapsedTime))
+			log.Info("Generated success.")
+
 			return nil
 		},
 	}
@@ -84,6 +102,4 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-
-	log.Info("Success.")
 }

@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/essentialkaos/translit/v2"
 )
 
 type (
@@ -23,12 +25,11 @@ type (
 
 	// Person сгенерированная персона.
 	Person struct {
-		Surname    string
-		Name       string
-		Patronymic string
-		Email      string
-		Phone      string
-		Region     string
+		Surname    string `csv:"surname" json:"surname,omitempty"`
+		Name       string `csv:"name" json:"name,omitempty"`
+		Patronymic string `csv:"patronymic" json:"patronymic,omitempty"`
+		Email      string `csv:"email" json:"email,omitempty"`
+		Phone      string `csv:"phone" json:"phone,omitempty"`
 	}
 )
 
@@ -36,7 +37,7 @@ type Generator struct {
 	data *FakeData
 }
 
-func NewGenerator(data *FakeData) *Generator {
+func New(data *FakeData) *Generator {
 	rand.Seed(time.Now().UnixNano())
 	return &Generator{
 		data: data,
@@ -52,7 +53,6 @@ func (g *Generator) MakePerson() Person {
 		Patronymic: g.rndPatronymic(gender),
 		Email:      g.rndEmail(surname),
 		Phone:      g.rndPhone(),
-		Region:     g.rndRegion(),
 	}
 
 	return person
@@ -84,10 +84,4 @@ func (g *Generator) rndPhone() string {
 	min := 9000000000
 	max := 9999999999
 	return fmt.Sprintf("+7%d", rand.Intn(max-min+1)+min)
-}
-
-func (g *Generator) rndRegion() string {
-	min := 1
-	max := 95
-	return fmt.Sprintf("%d", rand.Intn(max-min+1)+min)
 }
