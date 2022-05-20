@@ -4,7 +4,6 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"os"
 	"strings"
 
 	"github.com/charoit/person-gen/pkg/faker"
@@ -28,9 +27,8 @@ func (s *Storage) Load() (faker.Fake, error) {
 		if err != nil {
 			return err
 		}
-		dir := strings.Split(path, string(os.PathSeparator))
-		//fmt.Println(path, len(dir))
 
+		dir := strings.Split(path, "/")
 		switch {
 		// hosts
 		case len(dir) == 2 && !d.IsDir():

@@ -96,7 +96,6 @@ func main() {
 			if fakeData, err = files.NewStorage(resources).Load(); err != nil {
 				return fmt.Errorf("loading data failed: %w", err)
 			}
-
 			return nil
 		},
 
