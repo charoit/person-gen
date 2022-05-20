@@ -17,6 +17,7 @@ func New(w io.Writer) *Writer {
 }
 
 func (w *Writer) Append(v interface{}) error {
+	w.encoder.Separator(';')
 	if !w.encoder.HeaderWritten() {
 		if err := w.encoder.EncodeHeader(nil, v); err != nil {
 			return err
