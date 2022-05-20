@@ -1,11 +1,15 @@
 package main
 
 import (
+	"embed"
 	"fmt"
+	"github.com/charoit/person-gen/pkg/faker"
+
 	"os"
 	"time"
 
-	"github.com/charoit/person-gen/generator"
+	"github.com/charoit/person-gen/pkg/generator"
+	"github.com/charoit/person-gen/pkg/storage/files"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -23,11 +27,15 @@ const (
 
 var (
 	// Version see (http://semver.org/)
-	// `-ldflags "-X main.Version=${VERSION}"`.
+	// -ldflags "-X main.Version=${VERSION}"
 	Version = "0.0.0-develop"
 )
 
+//go:embed resources/*
+var resources embed.FS
+
 func main() {
+	var fakeData faker.Fake
 	var elapsedTime time.Time
 
 	log := &logrus.Logger{
@@ -54,10 +62,17 @@ func main() {
 				Destination: &params.Count,
 			},
 			&cli.StringFlag{
-				Name:    "out",
-				Aliases: []string{"o"},
-				Usage:   "Output result to `FILE`",
-				//Required:    true,
+				Name:        "sex",
+				Aliases:     []string{"s"},
+				Usage:       "Sex of person `VALUE`",
+				Value:       "all",
+				Destination: &params.Sex,
+			},
+			&cli.StringFlag{
+				Name:        "out",
+				Aliases:     []string{"o"},
+				Usage:       "Output result to `FILE`",
+				Required:    true,
 				Destination: &params.OutFile,
 			},
 			&cli.StringFlag{
@@ -76,6 +91,15 @@ func main() {
 			},
 		},
 
+		Before: func(c *cli.Context) error {
+			var err error
+			if fakeData, err = files.NewStorage(resources).Load(); err != nil {
+				return fmt.Errorf("loading data failed: %w", err)
+			}
+
+			return nil
+		},
+
 		Action: func(c *cli.Context) error {
 			if err := params.Validate(); err != nil {
 				return fmt.Errorf("validate failed: %w", err)
@@ -85,7 +109,7 @@ func main() {
 			elapsedTime = time.Now()
 
 			gen := generator.New(log, &params)
-			total, err := gen.Generate()
+			total, err := gen.Generate(&fakeData)
 			if err != nil {
 				return fmt.Errorf("generated failed: %w", err)
 			}

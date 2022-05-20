@@ -6,9 +6,9 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/charoit/person-gen/faker"
-	"github.com/charoit/person-gen/generator/csv"
-	"github.com/charoit/person-gen/generator/json"
+	"github.com/charoit/person-gen/pkg/faker"
+	"github.com/charoit/person-gen/pkg/generator/csv"
+	"github.com/charoit/person-gen/pkg/generator/json"
 	"github.com/sirupsen/logrus"
 )
 
@@ -35,7 +35,7 @@ func New(log *logrus.Logger, params *Params) *Generator {
 	}
 }
 
-func (g *Generator) Generate() (int, error) {
+func (g *Generator) Generate(data *faker.Fake) (int, error) {
 	file, err := os.OpenFile(g.params.OutFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 	if err != nil {
 		return 0, err
@@ -47,13 +47,14 @@ func (g *Generator) Generate() (int, error) {
 		}
 	}()
 
+	sex := faker.ParseSex(g.params.Sex)
 	wr := g.writer(file, FileFormat(g.params.Format))
-	gn := faker.New(&faker.FakeRus)
+	gn := faker.New(data)
 
 	total := 0
 	for total != g.params.Count {
 		total++
-		person := gn.MakePerson()
+		person := gn.MakePerson("rus", sex)
 		if err = wr.Append(person); err != nil {
 			return total, err
 		}

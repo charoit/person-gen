@@ -2,6 +2,7 @@ package generator
 
 import (
 	"errors"
+	"github.com/charoit/person-gen/pkg/faker"
 	"math"
 )
 
@@ -12,6 +13,7 @@ var (
 
 type Params struct {
 	Count   int
+	Sex     string
 	OutFile string
 	Format  string
 	Verbose bool
@@ -27,6 +29,7 @@ func (p *Params) Validate() error {
 		p.Format = string(Csv)
 		return nil
 	}
+	p.Sex = faker.ParseSex(p.Sex).String()
 
 	return nil
 }
