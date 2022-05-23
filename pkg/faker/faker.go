@@ -78,14 +78,15 @@ func (f *Faker) randYearAndAge() (int, int) {
 
 // randEmail random email.
 func (f *Faker) randEmail(surname, name string, year int) string {
-	prefix := strings.ToLower(translit.EncodeToICAO(surname))
+	prefix := "email"
+	first := strings.ToLower(translit.EncodeToICAO(surname))
 	middle := strings.ToLower(translit.EncodeToICAO(name))
 	host := f.data.Hosts[rand.Intn(len(f.data.Hosts))]
 
-	return fmt.Sprintf("%s.%s%d@%s", prefix, middle, year, host)
+	return fmt.Sprintf("%s.%s.%s%d@%s", prefix, first, middle, year, host)
 }
 
 // randPhone random phone.
 func (f *Faker) randPhone() string {
-	return fmt.Sprintf("+7%d", f.randomRange(9000000000, 9999999999))
+	return fmt.Sprintf("+7999%d", f.randomRange(9000000, 9999999))
 }
